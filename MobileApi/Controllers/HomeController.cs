@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace MobileApi.Controllers
 {
     [Authorize]
+    [Route("api/[controller]")]
     public class HomeController : Controller
     {
         public IActionResult Index() => new OkObjectResult(new string[]

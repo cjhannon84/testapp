@@ -1,30 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AspNet.Security.OpenIdConnect.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 
 namespace MobileApi
 {
     public class Startup
     {
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddAuthentication().AddOpenIdConnectServer(options =>
+            services.AddAuthentication(options=>
             {
-                // Enable the token endpoint.
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme= JwtBearerDefaults.AuthenticationScheme;
+                
+            }).AddOpenIdConnectServer(options =>
+            {
+                options.AccessTokenHandler = new JwtSecurityTokenHandler()
+                {
+                    
+                };
+                options.SigningCredentials.AddEphemeralKey();
+                
                 options.TokenEndpointPath = "/connect/token";
-
-                // Implement OnValidateTokenRequest to support flows using the token endpoint.
                 options.Provider.OnValidateTokenRequest = context =>
                 {
                     // Reject token requests that don't use grant_type=password or grant_type=refresh_token.
@@ -60,8 +69,6 @@ namespace MobileApi
                     // the request is automatically rejected.
                     return Task.CompletedTask;
                 };
-
-                // Implement OnHandleTokenRequest to support token requests.
                 options.Provider.OnHandleTokenRequest = context =>
                 {
                     // Only handle grant_type=password token requests and let
@@ -105,19 +112,32 @@ namespace MobileApi
                         ticket.SetScopes(
                             OpenIdConnectConstants.Scopes.Profile,
                             OpenIdConnectConstants.Scopes.OfflineAccess);
+                        ticket.SetAudiences(new string[]{
+                            "https://localhost:44377/"
+                            });
 
                         context.Validate(ticket);
                     }
 
                     return Task.CompletedTask;
                 };
-            }).AddJwtBearer();
+            }).AddJwtBearer(options=>
+            {
+                options.Audience = "https://localhost:44377/";
+                options.Authority = "https://localhost:44377/";
+                options.TokenValidationParameters = new TokenValidationParameters()
+                {
+                    ValidIssuer = "https://localhost:44377/",
+                    ValidAudience = "https://localhost:44377/"
+                };
+            });
+            services.AddMvc();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseAuthentication();
+            app.UseMvcWithDefaultRoute();
         }
     }
 }

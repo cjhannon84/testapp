@@ -11,8 +11,13 @@
 
   <ItemGroup>
     <PackageReference Include="AspNet.Security.OpenIdConnect.Server" Version="2.0.0" />
+    <PackageReference Include="Dapper" Version="1.50.5" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MobileApp.Core\MobileApp.Core.csproj" />
   </ItemGroup>
 
 </Project>
